@@ -6,7 +6,6 @@ import com.avaje.ebean.Expr;
 import com.avaje.ebean.SqlUpdate;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import play.libs.Json;
-import utils.Utils;
 
 import javax.persistence.*;
 import java.util.*;
@@ -25,7 +24,6 @@ public class Job extends HecticusModel {
     private String className;
     private String name;
     private String params;
-    private Integer idApp;
     private Long nextTimestamp;
     private String time;
     private String timeParams;
@@ -47,8 +45,6 @@ public class Job extends HecticusModel {
         tr.put("status", status);
         tr.put("className", className);
         tr.put("name",name);
-        //params
-        tr.put("idApp",idApp);
         return tr;
     }
 
@@ -140,7 +136,7 @@ public class Job extends HecticusModel {
 
     public static void surrenderAllJobs() {
         try{
-            int instanceID = ServerInstance.getInstance().getInstanceID();
+            long instanceID = ServerInstance.getInstance().getInstanceID();
             String sql = "update jobs set `status` = 1, `id_instance` = null where `id_instance` = " + instanceID;
             SqlUpdate update = Ebean.createSqlUpdate(sql);
             int modifiedCount = Ebean.execute(update);
@@ -335,14 +331,6 @@ public class Job extends HecticusModel {
 
     public void setParams(String params) {
         this.params = params;
-    }
-
-    public Integer getIdApp() {
-        return idApp;
-    }
-
-    public void setIdApp(Integer idApp) {
-        this.idApp = idApp;
     }
 
     public Long getNextTimestamp() {

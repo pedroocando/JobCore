@@ -18,7 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 
-public class Utils {
+public class JobCoreUtils {
     /**
 	 * Metodo para imprimir errores al log
 	 * @param invoker			job para obtener la ruta del error, puede ser null

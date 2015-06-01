@@ -3,7 +3,6 @@ package backend;
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import exceptions.CouldNotCreateInstanceException;
 import models.Config;
 import models.Instance;
 import models.Job;
@@ -12,7 +11,7 @@ import play.libs.F;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 import scala.concurrent.duration.Duration;
-import utils.Utils;
+import utils.JobCoreUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -52,13 +51,13 @@ public class ThreadSupervisor extends HecticusThread {
             ServerInstance serverInstance = ServerInstance.getInstance();
             if(serverInstance.isInstanceMaster()){
                 if(!serverInstance.isInstanceTest()) {
-                    Utils.printToLog(ThreadSupervisor.class, "", "Esperando por otras instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
+                    JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Esperando por otras instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
                     try {
                         Thread.sleep(30000);
                     } catch (Exception e) {
 
                     }
-                    Utils.printToLog(ThreadSupervisor.class, "", "Espera Terminada", false, null, "support-level-1", Config.LOGGER_INFO);
+                    JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Espera Terminada", false, null, "support-level-1", Config.LOGGER_INFO);
                 }
                 distributeJobs();
             } else {
@@ -72,7 +71,7 @@ public class ThreadSupervisor extends HecticusThread {
             activateJobs();
             //check for bad jobs
         } catch (Exception e){
-            Utils.printToLog(ThreadSupervisor.class, "Error en el ThreadSupervisor", "Error desconocido procesando Jobs", true, e, "support-level-1", Config.LOGGER_ERROR);
+            JobCoreUtils.printToLog(ThreadSupervisor.class, "Error en el ThreadSupervisor", "Error desconocido procesando Jobs", true, e, "support-level-1", Config.LOGGER_ERROR);
         }
     }
 
@@ -88,7 +87,7 @@ public class ThreadSupervisor extends HecticusThread {
             int daemonMin = (int) Math.floor(unasignedDaemons.size() / (double) runningInstances.size());
             int scheduledMax = (int) Math.ceil(unasignedScheduled.size() / (double) runningInstances.size());
             int scheduledMin = (int) Math.floor(unasignedScheduled.size() / (double) runningInstances.size());
-            Utils.printToLog(ThreadSupervisor.class, "", "Distribuyendo jobs... instancias = " + runningInstances.size() + " daemonMax = " + daemonMax + " daemonMin = " + daemonMin + " scheduledMax = " + scheduledMax + " scheduledMin = " + scheduledMin, false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Distribuyendo jobs... instancias = " + runningInstances.size() + " daemonMax = " + daemonMax + " daemonMin = " + daemonMin + " scheduledMax = " + scheduledMax + " scheduledMin = " + scheduledMin, false, null, "support-level-1", Config.LOGGER_INFO);
             int daemonJobs = 0;
             int scheduledJobs = 0;
             int daemonIndex = 0;
@@ -125,23 +124,23 @@ public class ThreadSupervisor extends HecticusThread {
         WSResponse wsResponse = null;
         int wsStatus = 0;
         StringBuilder fallenInstances = new StringBuilder();
-        Utils.printToLog(ThreadSupervisor.class, "", "Checkeando Instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
+        JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Checkeando Instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
         for(Instance instance : runningInstances){
             try {
                 result = WS.url("http://" + instance.getIp() + "/alive").get();
                 wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 wsStatus = wsResponse.getStatus();
                 if (wsStatus != 200) {
-                    Utils.printToLog(ThreadSupervisor.class, "", instance.getName() + " muerta", false, null, "support-level-1", Config.LOGGER_INFO);
+                    JobCoreUtils.printToLog(ThreadSupervisor.class, "", instance.getName() + " muerta", false, null, "support-level-1", Config.LOGGER_INFO);
                     fallenInstances.append("\t - ").append(instance.getIp());
                     instance.setRunning(false);
                     instance.update();
                 } else {
-                    Utils.printToLog(ThreadSupervisor.class, "", instance.getName() + " vive", false, null, "support-level-1", Config.LOGGER_INFO);
+                    JobCoreUtils.printToLog(ThreadSupervisor.class, "", instance.getName() + " vive", false, null, "support-level-1", Config.LOGGER_INFO);
                     realRunning.add(instance);
                 }
             } catch (Exception e){
-                Utils.printToLog(ThreadSupervisor.class, "", instance.getName() + " muerta", false, null, "support-level-1", Config.LOGGER_INFO);
+                JobCoreUtils.printToLog(ThreadSupervisor.class, "", instance.getName() + " muerta", false, null, "support-level-1", Config.LOGGER_INFO);
                 fallenInstances.append("\t - ").append(instance.getIp());
                 instance.setRunning(false);
                 instance.update();
@@ -154,18 +153,18 @@ public class ThreadSupervisor extends HecticusThread {
 //        downInstances.clear();
         runningInstances.clear();
         if(!fallenInstances.toString().isEmpty()){
-            Utils.printToLog(ThreadSupervisor.class, "Instancias Apagadas", "Las instancias siguientes instancias estan apagadas: \n " + fallenInstances.toString(), true, null, "support-level-1", Config.LOGGER_ERROR);
+            JobCoreUtils.printToLog(ThreadSupervisor.class, "Instancias Apagadas", "Las instancias siguientes instancias estan apagadas: \n " + fallenInstances.toString(), true, null, "support-level-1", Config.LOGGER_ERROR);
             fallenInstances.delete(0, fallenInstances.length());
         }
         return realRunning;
     }
 
     private void checkMaster(ServerInstance serverInstance) {
-        Utils.printToLog(ThreadSupervisor.class, "", "Buscando al master" , false, null, "support-level-1", Config.LOGGER_INFO);
+        JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Buscando al master", false, null, "support-level-1", Config.LOGGER_INFO);
         Instance master = Instance.getMaster();
         if(master == null) {
             serverInstance.takeMaster();
-            Utils.printToLog(ThreadSupervisor.class, "Instancia master apagada", "No hay master, se reasignara el rol de master" , true, null, "support-level-1", Config.LOGGER_ERROR);
+            JobCoreUtils.printToLog(ThreadSupervisor.class, "Instancia master apagada", "No hay master, se reasignara el rol de master", true, null, "support-level-1", Config.LOGGER_ERROR);
         } else {
             boolean takeMaster = false;
             try {
@@ -182,7 +181,7 @@ public class ThreadSupervisor extends HecticusThread {
                     serverInstance.takeMaster();
                     master.setMaster(false);
                     master.update();
-                    Utils.printToLog(ThreadSupervisor.class, "Instancia master apagada", "La instancia " + master.getName() + " esta apagada, se reasignara el rol de master" , true, null, "support-level-1", Config.LOGGER_ERROR);
+                    JobCoreUtils.printToLog(ThreadSupervisor.class, "Instancia master apagada", "La instancia " + master.getName() + " esta apagada, se reasignara el rol de master", true, null, "support-level-1", Config.LOGGER_ERROR);
                 }
             }
         }
@@ -207,7 +206,7 @@ public class ThreadSupervisor extends HecticusThread {
             }
         }
         if(!fallenInstances.toString().isEmpty()){
-            Utils.printToLog(ThreadSupervisor.class, "Instancias Apagadas", "Las instancias " + fallenInstances.toString() + " estan apagadas", true, null, "support-level-1", Config.LOGGER_ERROR);
+            JobCoreUtils.printToLog(ThreadSupervisor.class, "Instancias Apagadas", "Las instancias " + fallenInstances.toString() + " estan apagadas", true, null, "support-level-1", Config.LOGGER_ERROR);
             fallenInstances.delete(0, fallenInstances.length());
         }
     }
@@ -234,7 +233,7 @@ public class ThreadSupervisor extends HecticusThread {
             for(HecticusThread ht : activeJobs){
                 ht.cancel();
             }
-            Utils.printToLog(ThreadSupervisor.class, null, "Apagados " + activeJobs.size() + " EventManagers", false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(ThreadSupervisor.class, null, "Apagados " + activeJobs.size() + " EventManagers", false, null, "support-level-1", Config.LOGGER_INFO);
             activeJobs.clear();
         }
         Job.surrenderAllJobs();
@@ -245,7 +244,7 @@ public class ThreadSupervisor extends HecticusThread {
         for(HecticusThread ht : activeJobs){
             long threadTime = ht.runningTime();
             if(isAlive() && ht.isActive() && threadTime > allowedTime){
-                Utils.printToLog(ThreadSupervisor.class, "Job Bloqueado", "El job " + ht.getName() + " lleva " + threadTime + " sin pasar por un setAlive()", true, null, "support-level-1", Config.LOGGER_ERROR);
+                JobCoreUtils.printToLog(ThreadSupervisor.class, "Job Bloqueado", "El job " + ht.getName() + " lleva " + threadTime + " sin pasar por un setAlive()", true, null, "support-level-1", Config.LOGGER_ERROR);
             }
         }
     }
@@ -272,7 +271,6 @@ public class ThreadSupervisor extends HecticusThread {
                             jobParams = mapper.readValue(tempParams, LinkedHashMap.class);
                         }
                         j.setName(actual.getName() + "-" + System.currentTimeMillis());
-                        j.setIdApp(actual.getIdApp());
                         j.setParams(jobParams);
                         j.setJob(actual);
                         Cancellable cancellable = null;
@@ -285,7 +283,7 @@ public class ThreadSupervisor extends HecticusThread {
                         activeJobs.add(j);
                     }catch (Exception ex){
                         actual.failedJob();
-                        Utils.printToLog(ThreadSupervisor.class,
+                        JobCoreUtils.printToLog(ThreadSupervisor.class,
                                 "Error en el ThreadSupervisor",
                                 "ocurrio un error activando el job:" + actual.getName() + " id:" + actual.getId() + " el job sera desactivado.",
                                 true,
@@ -296,7 +294,7 @@ public class ThreadSupervisor extends HecticusThread {
                 }
             }
         }catch (Exception ex){
-            Utils.printToLog(ThreadSupervisor.class,
+            JobCoreUtils.printToLog(ThreadSupervisor.class,
                     "Error en el ThreadSupervisor",
                     "error desconocido en el activate jobs",
                     true,
@@ -324,7 +322,7 @@ public class ThreadSupervisor extends HecticusThread {
                                 }
                             }
                         } catch (Exception ex) {
-                            Utils.printToLog(ThreadSupervisor.class,
+                            JobCoreUtils.printToLog(ThreadSupervisor.class,
                                     "Error en el ThreadSupervisor",
                                     "error desconocido en el apagando jobs",
                                     true,
@@ -336,7 +334,7 @@ public class ThreadSupervisor extends HecticusThread {
                 }
 
             } catch (Exception ex) {
-                Utils.printToLog(ThreadSupervisor.class,
+                JobCoreUtils.printToLog(ThreadSupervisor.class,
                         "Error en el ThreadSupervisor",
                         "error desconocido en el apagando jobs",
                         true,

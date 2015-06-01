@@ -4,7 +4,7 @@ import akka.actor.Cancellable;
 import exceptions.CouldNotCreateInstanceException;
 import models.Config;
 import models.Job;
-import utils.Utils;
+import utils.JobCoreUtils;
 
 import javax.persistence.OptimisticLockException;
 import java.util.Map;
@@ -173,7 +173,7 @@ public abstract class HecticusThread implements Runnable {
                 active = true;
                 process(params);
             } catch (Throwable t){
-                Utils.printToLog(HecticusThread.class, "Error en el HecticusThread", "Ocurrio un error que llego hasta el HecticusThread: " + name, true, t, "support-level-1", Config.LOGGER_ERROR);
+                JobCoreUtils.printToLog(HecticusThread.class, "Error en el HecticusThread", "Ocurrio un error que llego hasta el HecticusThread: " + name, true, t, "support-level-1", Config.LOGGER_ERROR);
             } finally {
                 setAlive();
                 active = false;
@@ -205,9 +205,9 @@ public abstract class HecticusThread implements Runnable {
             if(cancellable != null) {
                 cancellable.cancel();
             }
-            Utils.printToLog(HecticusThread.class, null, "Apagado " + name + " vivio " + (System.currentTimeMillis() - initTime), false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(HecticusThread.class, null, "Apagado " + name + " vivio " + (System.currentTimeMillis() - initTime), false, null, "support-level-1", Config.LOGGER_INFO);
         } catch (Throwable t){
-            Utils.printToLog(HecticusThread.class, "Error en el HecticusThread", "Ocurrio cancelando el HecticusThread: " + name, true, t, "support-level-1", Config.LOGGER_ERROR);
+            JobCoreUtils.printToLog(HecticusThread.class, "Error en el HecticusThread", "Ocurrio cancelando el HecticusThread: " + name, true, t, "support-level-1", Config.LOGGER_ERROR);
         }
     }
 
@@ -230,7 +230,7 @@ public abstract class HecticusThread implements Runnable {
             if(cancellable != null) {
                 cancellable.cancel();
             }
-            Utils.printToLog(HecticusThread.class, null, "Apagado " + name + " vivio " + (System.currentTimeMillis() - initTime), false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(HecticusThread.class, null, "Apagado " + name + " vivio " + (System.currentTimeMillis() - initTime), false, null, "support-level-1", Config.LOGGER_INFO);
         }
     }
 

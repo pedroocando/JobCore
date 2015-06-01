@@ -4,22 +4,19 @@ import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import exceptions.CouldNotCreateInstanceException;
 import models.Config;
 import models.Instance;
 import models.Job;
 import play.Play;
-import play.api.libs.json.Json;
 import play.libs.F;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 import scala.concurrent.duration.Duration;
-import utils.Utils;
+import utils.JobCoreUtils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -57,9 +54,9 @@ public class ServerInstance {
                 instance = new Instance(serverIp, serverName, true, !Play.isProd());
                 instance.save();
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             instance = null;
-            Utils.printToLog(ServerInstance.class, "Error cargando el IP del servidor", "Ocurrio un error cargando el IP del servidor desde el archivo.", true, ex, "support-level-1", Config.LOGGER_ERROR);
+            JobCoreUtils.printToLog(ServerInstance.class, "Error cargando el IP del servidor", "Ocurrio un error cargando el IP del servidor desde el archivo.", true, ex, "support-level-1", Config.LOGGER_ERROR);
         } finally {
             try {if (br != null)br.close();} catch (Exception ex) {}
         }
@@ -79,12 +76,12 @@ public class ServerInstance {
                 Job.resetJobsOnStart();
             }
             int supervisorSleepTime = Config.getInt("supervisor-sleep-time");
-            Utils.printToLog(ServerInstance.class, null, "Arrancando ThreadSupervisor", false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(ServerInstance.class, null, "Arrancando ThreadSupervisor", false, null, "support-level-1", Config.LOGGER_INFO);
             ThreadSupervisor supervisor = new ThreadSupervisor(instance.getRun(), system);
             Cancellable cancellable = system.scheduler().schedule(Duration.create(1, SECONDS), Duration.create(supervisorSleepTime, MINUTES), supervisor, system.dispatcher());
             supervisor.setCancellable(cancellable);
             instance.setSupervisor(supervisor);
-            Utils.printToLog(ServerInstance.class, null, "Arrancando " + instance.getName(), false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(ServerInstance.class, null, "Arrancando " + instance.getName(), false, null, "support-level-1", Config.LOGGER_INFO);
         }
     }
 
@@ -119,7 +116,7 @@ public class ServerInstance {
         return me;
     }
 
-    public int getInstanceID() {
+    public long getInstanceID() {
         return instance.getIdInstance();
     }
 
@@ -161,7 +158,7 @@ public class ServerInstance {
         instance.setRunning(false);
         instance.setMaster(false);
         instance.update();
-        Utils.printToLog(ServerInstance.class, "Apagando " + Config.getString("app-name"), "Apagando " + instance.getName() + ", se recibio la señal de shutdown", true, null, "support-level-1", Config.LOGGER_INFO);
+        JobCoreUtils.printToLog(ServerInstance.class, "Apagando " + Config.getString("app-name"), "Apagando " + instance.getName() + ", se recibio la señal de shutdown", true, null, "support-level-1", Config.LOGGER_INFO);
     }
 
     public void takeMaster(){

@@ -1,9 +1,11 @@
 package controllers;
 
-import play.mvc.Controller;
 import play.mvc.Result;
 
-public class Application extends Controller {
+/**
+ * Created by plessmann on 01/06/15.
+ */
+public class Instances extends HecticusController {
 
     public static Result alive(){
         return ok("alive");
