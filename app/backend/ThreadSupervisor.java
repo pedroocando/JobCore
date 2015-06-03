@@ -81,7 +81,6 @@ public class ThreadSupervisor extends HecticusThread {
         List<Job> unasignedScheduled = Job.getUnasignedScheduled();
         List<Instance> runningInstances = Instance.getRunningInstances();
         runningInstances = validateRunningInstances(runningInstances);
-        System.out.println(unasignedDaemons.size() + " " + unasignedScheduled.size() + " " + runningInstances.size());
         if((!unasignedDaemons.isEmpty() || !unasignedScheduled.isEmpty()) && !runningInstances.isEmpty()) {
             int daemonMax = (int) Math.ceil(unasignedDaemons.size() / (double) runningInstances.size());
             int daemonMin = (int) Math.floor(unasignedDaemons.size() / (double) runningInstances.size());
@@ -273,6 +272,7 @@ public class ThreadSupervisor extends HecticusThread {
                         j.setName(actual.getName() + "-" + System.currentTimeMillis());
                         j.setParams(jobParams);
                         j.setJob(actual);
+                        j.setRun(getRun());
                         Cancellable cancellable = null;
                         if(actual.isDaemon()){
                             cancellable = system.scheduler().schedule(Duration.create(jobDelay, SECONDS), Duration.create(Long.parseLong(actual.getTimeParams()), SECONDS), j, system.dispatcher());

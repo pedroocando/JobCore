@@ -123,4 +123,22 @@ public class Config extends Model {
         return Integer.parseInt(c.getValue());
     }
 
+    /**
+     * Metodo para obtener el nombre del host actual
+     * @return nombre del host actual
+     */
+    public static String getHost() {
+        Config c = finder.where().eq("configKey","host-url").findUnique();
+        return c.getValue();
+    }
+
+    /**
+     * Metodo para obtener el nombre del host actual
+     * @return nombre del host actual
+     */
+    public static String getPMCHost() {
+        Config c = finder.where().eq("configKey","pmc-url").findUnique();
+        return c.getValue();
+    }
+
 }

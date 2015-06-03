@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Instance extends HecticusModel {
 
     @Id
-    private Long idInstance;
+    private Integer idInstance;
     @Constraints.Required
     private String ip;
     @Constraints.Required
@@ -54,11 +54,11 @@ public class Instance extends HecticusModel {
         this.test = test;
     }
 
-    public Long getIdInstance() {
+    public int getIdInstance() {
         return idInstance;
     }
 
-    public void setIdInstance(long idInstance) {
+    public void setIdInstance(int idInstance) {
         this.idInstance = idInstance;
     }
 
@@ -102,7 +102,7 @@ public class Instance extends HecticusModel {
         this.master = master;
     }
 
-    public void setIdInstance(Long idInstance) {
+    public void setIdInstance(Integer idInstance) {
         this.idInstance = idInstance;
     }
 

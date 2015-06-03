@@ -9,6 +9,7 @@ import models.Config;
 import models.Instance;
 import models.Job;
 import play.Play;
+import play.core.PlayVersion;
 import play.libs.F;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
@@ -81,7 +82,7 @@ public class ServerInstance {
             Cancellable cancellable = system.scheduler().schedule(Duration.create(1, SECONDS), Duration.create(supervisorSleepTime, MINUTES), supervisor, system.dispatcher());
             supervisor.setCancellable(cancellable);
             instance.setSupervisor(supervisor);
-            JobCoreUtils.printToLog(ServerInstance.class, null, "Arrancando " + instance.getName(), false, null, "support-level-1", Config.LOGGER_INFO);
+            JobCoreUtils.printToLog(ServerInstance.class, null, "Arrancando " + instance.getName() + " Production = " + (Play.isProd()) + " PlayVersion.current() = " + PlayVersion.current(), false, null, "support-level-1", Config.LOGGER_INFO);
         }
     }
 
