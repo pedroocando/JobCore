@@ -1,5 +1,6 @@
 package models;
 
+import com.avaje.ebean.Page;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import backend.ThreadSupervisor;
 import play.Play;
@@ -11,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -160,6 +162,26 @@ public class Instance extends HecticusModel {
 
     public static List<Instance> getDownInstances(){
         return finder.where().eq("running", false).eq("test", false).findList();
+    }
+
+    //Finder Operations
+
+    public static Instance getByID(int id){
+        return finder.byId(id);
+    }
+
+    public static Iterator<Instance> getPage(int pageSize, int page){
+        Iterator<Instance> iterator = null;
+        if(pageSize == 0){
+            iterator = finder.all().iterator();
+        }else{
+            iterator = finder.where().setFirstRow(page).setMaxRows(pageSize).findList().iterator();
+        }
+        return  iterator;
+    }
+
+    public static Page<Instance> page(int page, int pageSize, String sortBy, String order, String filter) {
+        return finder.where().ilike("name", "%" + filter + "%").orderBy(sortBy + " " + order).findPagingList(pageSize).getPage(page);
     }
 
 }

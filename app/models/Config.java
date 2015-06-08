@@ -1,5 +1,6 @@
 package models;
 
+import com.avaje.ebean.Page;
 import play.data.validation.Constraints.MaxLength;
 import play.data.validation.Constraints.Required;
 import play.db.ebean.Model;
@@ -8,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.util.Iterator;
 
 @SuppressWarnings("serial")
 @Entity
@@ -139,6 +141,30 @@ public class Config extends Model {
     public static String getPMCHost() {
         Config c = finder.where().eq("configKey","pmc-url").findUnique();
         return c.getValue();
+    }
+
+    public static double getDouble(String key){
+        Config c = finder.where().eq("configKey", key).findUnique();
+        return Double.parseDouble(c.getValue());
+    }
+
+    public static Config getByID(long id){
+        return finder.byId(id);
+    }
+
+    public static Iterator<Config> getPage(int pageSize, int page){
+        Iterator<Config> iterator = null;
+        if(pageSize == 0){
+            iterator = finder.all().iterator();
+        }else{
+            iterator = finder.where().setFirstRow(page).setMaxRows(pageSize).findList().iterator();
+        }
+        return  iterator;
+    }
+
+
+    public static Page<Config> page(int page, int pageSize, String sortBy, String order, String filter) {
+        return finder.where().ilike("configKey", "%" + filter + "%").orderBy(sortBy + " " + order).findPagingList(pageSize).getPage(page);
     }
 
 }
