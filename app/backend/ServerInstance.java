@@ -92,7 +92,7 @@ public class ServerInstance {
             return false;
         } else {
             try {
-                F.Promise<WSResponse> result = WS.url("http://" + master.getIp() + "/alive").get();
+                F.Promise<WSResponse> result = WS.url("http://" + master.getIp() + "/jobcore/alive").get();
                 WSResponse wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 int wsStatus = wsResponse.getStatus();
                 System.out.println(wsStatus);

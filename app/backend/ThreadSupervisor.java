@@ -29,6 +29,7 @@ public class ThreadSupervisor extends HecticusThread {
 
     private ActorSystem system = null;
     private ArrayList<HecticusThread> activeJobs = null;
+    private long masterWaitTime;
 
     public ThreadSupervisor(String name, AtomicBoolean run, Cancellable cancellable, ActorSystem system) {
         super("ThreadSupervisor-"+name, run, cancellable);
@@ -53,7 +54,7 @@ public class ThreadSupervisor extends HecticusThread {
                 if(!serverInstance.isInstanceTest()) {
                     JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Esperando por otras instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
                     try {
-                        Thread.sleep(30000);
+                        Thread.sleep(masterWaitTime);
                     } catch (Exception e) {
 
                     }
@@ -126,7 +127,7 @@ public class ThreadSupervisor extends HecticusThread {
         JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Checkeando Instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
         for(Instance instance : runningInstances){
             try {
-                result = WS.url("http://" + instance.getIp() + "/alive").get();
+                result = WS.url("http://" + instance.getIp() + "/jobcore/alive").get();
                 wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 wsStatus = wsResponse.getStatus();
                 if (wsStatus != 200) {
@@ -167,7 +168,7 @@ public class ThreadSupervisor extends HecticusThread {
         } else {
             boolean takeMaster = false;
             try {
-                F.Promise<WSResponse> result = WS.url("http://" + master.getIp() + "/alive").get();
+                F.Promise<WSResponse> result = WS.url("http://" + master.getIp() + "/jobcore/alive").get();
                 WSResponse wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 int wsStatus = wsResponse.getStatus();
                 if(wsStatus != 200){
@@ -194,7 +195,7 @@ public class ThreadSupervisor extends HecticusThread {
         StringBuilder fallenInstances = new StringBuilder();
         for(Instance slave : slaves){
             try {
-                result = WS.url("http://" + slave.getIp() + "/alive").get();
+                result = WS.url("http://" + slave.getIp() + "/jobcore/alive").get();
                 wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 wsStatus = wsResponse.getStatus();
                 if (wsStatus != 200) {
@@ -212,7 +213,7 @@ public class ThreadSupervisor extends HecticusThread {
 
     private boolean checkInstance(Instance instance) {
         try {
-            F.Promise<WSResponse> result = WS.url("http://" + instance.getIp() + "/alive").get();
+            F.Promise<WSResponse> result = WS.url("http://" + instance.getIp() + "/jobcore/alive").get();
             WSResponse wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
             int wsStatus = wsResponse.getStatus();
             return wsStatus != 200;
@@ -224,6 +225,7 @@ public class ThreadSupervisor extends HecticusThread {
     private void init(){
         //start things and
         activeJobs = new ArrayList<>();
+        masterWaitTime = Config.getLong("master-wait-time");
     }
 
     @Override
