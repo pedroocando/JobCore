@@ -1,15 +1,19 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import models.Config;
 import play.libs.Json;
 import play.mvc.Controller;
+import play.mvc.Http;
 
 import javax.persistence.MappedSuperclass;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import static play.libs.Jsonp.jsonp;
 
 
 @MappedSuperclass
@@ -120,4 +124,54 @@ public class HecticusController extends Controller {
         tr.put("response", data);
         return tr;
     }
+
+    public static play.libs.Jsonp buildBasicJSONPResponse(int code, String responseMsg, ObjectNode obj) {
+        String callback = getJSONPCallback();
+        ObjectNode responseNode = buildBasicResponse(code, responseMsg, obj);
+        return jsonp(callback, responseNode);
+    }
+
+    public static ObjectNode buildBasicResponse(int code, String responseMsg, ObjectNode obj) {
+        ObjectNode responseNode = Json.newObject();
+        responseNode.put(Config.ERROR_KEY, code);
+        responseNode.put(Config.DESCRIPTION_KEY, responseMsg);
+        responseNode.put(Config.RESPONSE_KEY,obj);
+        return responseNode;
+    }
+
+    public static play.libs.Jsonp buildBasicJSONPResponse(int code, String responseMsg, JsonNode obj) {
+        String callback = getJSONPCallback();
+        ObjectNode responseNode = buildBasicResponse(code, responseMsg, obj);
+        return jsonp(callback, responseNode);
+    }
+
+    public static ObjectNode buildBasicResponse(int code, String responseMsg, JsonNode obj) {
+        ObjectNode responseNode = Json.newObject();
+        responseNode.put(Config.ERROR_KEY, code);
+        responseNode.put(Config.DESCRIPTION_KEY, responseMsg);
+        responseNode.put(Config.RESPONSE_KEY,obj);
+        return responseNode;
+    }
+
+    public static String getJSONPCallback(){
+        String callback = request().queryString().get("callback")[0];
+        return callback;
+    }
+
+    public static play.libs.Jsonp buildBasicJSONPResponse(int code, String responseMsg) {
+        String callback = getJSONPCallback();
+        ObjectNode responseNode = buildBasicResponse(code, responseMsg);
+        return jsonp(callback, responseNode);
+    }
+
+    public static play.libs.Jsonp buildBasicJSONPResponse(int code, String responseMsg, Exception e) {
+        String callback = getJSONPCallback();
+        ObjectNode responseNode = buildBasicResponse(code, responseMsg, e);
+        return jsonp(callback, responseNode);
+    }
+
+    public static Http.MultipartFormData getMultiformData(){
+        return request().body().asMultipartFormData();
+    }
+
 }

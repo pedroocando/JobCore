@@ -1,12 +1,16 @@
 import play.PlayJava
+import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
 
 name := """JobCore"""
 
 version := "1.0-SNAPSHOT"
 
+lazy val root = (project in file(".")).enablePlugins(PlayJava)
+
 scalaVersion := "2.10.1"
 
-val appDependencies = Seq(
+libraryDependencies ++= Seq(
   javaJdbc,
   javaEbean,
   cache,
@@ -32,8 +36,4 @@ resolvers ++= Seq(
   Resolver.url("Objectify Play Repository", url("http://schaloner.github.io/releases/"))(Resolver.ivyStylePatterns)
 )
 
-lazy val root = project.in(file("."))
-  .enablePlugins(PlayJava)
-  .settings(
-    libraryDependencies ++= appDependencies
-  )
+

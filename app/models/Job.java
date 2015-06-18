@@ -3,6 +3,7 @@ package models;
 import backend.ServerInstance;
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Page;
 import com.avaje.ebean.SqlUpdate;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import play.libs.Json;
@@ -399,6 +400,14 @@ public class Job extends HecticusModel {
         this.refresh();
         this.running = false;
         this.update();
+    }
+
+    public static Page<Job> page(int page, int pageSize, String sortBy, String order, String filter) {
+        return finder.where().ilike("name", "%" + filter + "%").orderBy(sortBy + " " + order).findPagingList(pageSize).getPage(page);
+    }
+
+    public static Job getByID(long id){
+        return finder.byId(id);
     }
 
 
