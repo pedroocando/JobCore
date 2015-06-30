@@ -30,7 +30,7 @@ public class Job extends HecticusModel {
     private String timeParams;
     private Integer frequency;
     private boolean daemon;
-    private boolean running;
+//    private boolean running;
 
     @OneToOne
     @JoinColumn(name = "id_instance")
@@ -382,23 +382,23 @@ public class Job extends HecticusModel {
         this.instance = instance;
     }
 
-    public boolean isRunning() {
-        return running;
-    }
+//    public boolean isRunning() {
+//        return running;
+//    }
 
-    public void setRunning(boolean running) {
-        this.running = running;
-    }
+//    public void setRunning(boolean running) {
+//        this.running = running;
+//    }
 
     public void markAsRunning(){
         this.refresh();
-        this.running = true;
+//        this.running = true;
         this.update();
     }
 
     public void markAsStopped(){
         this.refresh();
-        this.running = false;
+//        this.running = false;
         this.update();
     }
 
