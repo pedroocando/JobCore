@@ -167,4 +167,9 @@ public class Config extends Model {
         return finder.where().ilike("configKey", "%" + filter + "%").orderBy(sortBy + " " + order).findPagingList(pageSize).getPage(page);
     }
 
+    public static boolean getBoolean(String key) {
+        Config c = finder.where().eq("configKey", key).findUnique();
+        int value = Integer.parseInt(c.getValue());
+        return value == 0 ? false : true;
+    }
 }
