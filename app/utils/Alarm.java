@@ -49,7 +49,8 @@ public class Alarm {
      */
     public static void sendMail(String recipients[], String subject, String message) {
         try {
-            subject = ServerInstance.instanceName + " - " + subject;
+            String appName = Config.getAppName();
+            subject = ServerInstance.instanceName + (appName != null ? " - " + appName : "") + " - " + subject;
             Long o = tabla.get(subject);
             if (o != null) {
                 if ((System.currentTimeMillis() - o) < Config.getLong("alarm-send-millis")) {
