@@ -2,6 +2,7 @@ package backend;
 
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import models.Config;
 import models.Instance;
@@ -13,10 +14,8 @@ import play.libs.ws.WSResponse;
 import scala.concurrent.duration.Duration;
 import utils.JobCoreUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,6 +29,7 @@ public class ThreadSupervisor extends HecticusThread {
     private ActorSystem system = null;
     private ArrayList<HecticusThread> activeJobs = null;
     private long masterWaitTime;
+    private Map<Long, ArrayList<HecticusThread>> multiInstanceJobs = null;
 
     public ThreadSupervisor(String name, AtomicBoolean run, Cancellable cancellable, ActorSystem system) {
         super("ThreadSupervisor-"+name, run, cancellable);
@@ -226,6 +226,7 @@ public class ThreadSupervisor extends HecticusThread {
         //start things and
         activeJobs = new ArrayList<>();
         masterWaitTime = Config.getLong("master-wait-time");
+        multiInstanceJobs = new HashMap<>();
     }
 
     @Override
@@ -236,6 +237,19 @@ public class ThreadSupervisor extends HecticusThread {
             }
             JobCoreUtils.printToLog(ThreadSupervisor.class, null, "Apagados " + activeJobs.size() + " EventManagers", false, null, "support-level-1", Config.LOGGER_INFO);
             activeJobs.clear();
+        }
+        if(multiInstanceJobs != null && !multiInstanceJobs.isEmpty()){
+            Set<Long> jobsIDs = multiInstanceJobs.keySet();
+            ArrayList<HecticusThread> instances;
+            for(long id : jobsIDs){
+                instances = multiInstanceJobs.get(id);
+                if(instances != null && !instances.isEmpty()){
+                    for (HecticusThread ht : instances) {
+                        ht.cancel();
+                    }
+                    instances.clear();
+                }
+            }
         }
         Job.surrenderAllJobs();
     }
@@ -253,41 +267,68 @@ public class ThreadSupervisor extends HecticusThread {
     private void activateJobs() {
         try {
             ServerInstance serverInstance = ServerInstance.getInstance();
-            List<Job> currentList = Job.getToActivateJobs(serverInstance.getRealInstance());
+            List<Job> jobsToActivate = Job.getToActivateJobs(serverInstance.getRealInstance());
             long jobDelay = Config.getLong("job-delay");
-            if (currentList != null){
-                for (int i = 0 ; i < currentList.size(); i++){
-                    Job actual = currentList.get(i);
+            HecticusThread jobInstance;
+            if (jobsToActivate != null && !jobsToActivate.isEmpty()){
+                for(Job job : jobsToActivate){
                     try {
-                        //getting class name
-                        Class jobClassName = Class.forName(actual.getClassName().trim());
-                        final HecticusThread j = (HecticusThread) jobClassName.newInstance();
-                        //update to running
-                        actual.activateJob();
-                        //parse params
-                        LinkedHashMap jobParams = null;
-                        if (actual.getParams() != null && !actual.getParams().isEmpty()) {
-                            String tempParams = StringEscapeUtils.unescapeHtml4(actual.getParams());
-                            ObjectMapper mapper = new ObjectMapper();
-                            jobParams = mapper.readValue(tempParams, LinkedHashMap.class);
-                        }
-                        j.setName(actual.getName() + "-" + System.currentTimeMillis());
-                        j.setParams(jobParams);
-                        j.setJob(actual);
-                        j.setRun(getRun());
-                        Cancellable cancellable = null;
-                        if(actual.isDaemon()){
-                            cancellable = system.scheduler().schedule(Duration.create(jobDelay, SECONDS), Duration.create(Long.parseLong(actual.getTimeParams()), SECONDS), j, system.dispatcher());
-                        } else {
-                            cancellable = system.scheduler().scheduleOnce(Duration.create(jobDelay, SECONDS), j, system.dispatcher());
-                        }
-                        j.setCancellable(cancellable);
-                        activeJobs.add(j);
+                        jobInstance = instatiateJob(job, jobDelay);
+                        activeJobs.add(jobInstance);
                     }catch (Exception ex){
-                        actual.failedJob();
+                        job.failedJob();
                         JobCoreUtils.printToLog(ThreadSupervisor.class,
                                 "Error en el ThreadSupervisor",
-                                "ocurrio un error activando el job:" + actual.getName() + " id:" + actual.getId() + " el job sera desactivado.",
+                                "ocurrio un error activando el job:" + job.getName() + " id:" + job.getId() + " el job sera desactivado.",
+                                true,
+                                ex,
+                                "support-level-1",
+                                Config.LOGGER_ERROR);
+                    }
+                }
+            }
+
+            jobsToActivate = Job.getMultiInstanceJobs();
+            if (jobsToActivate != null && !jobsToActivate.isEmpty()){
+                ArrayList<HecticusThread> multiJobInstances;
+                for(Job job : jobsToActivate){
+                    try {
+                        multiJobInstances = multiInstanceJobs.get(job.getId());
+                        if (multiJobInstances != null && !multiJobInstances.isEmpty()){
+                            if(multiJobInstances.size() > job.getQuantity()){
+                                int toStop = multiJobInstances.size() - job.getQuantity();
+                                for(int i = 0; isAlive() && i <  toStop; ++i){
+                                    jobInstance = multiJobInstances.get(0);
+                                    jobInstance.cancel();
+                                    multiJobInstances.remove(0);
+                                }
+                                JobCoreUtils.printToLog(ThreadSupervisor.class, null, "Quedan " + multiJobInstances.size() + " " + job.getName(), false, null, "support-level-1", Config.LOGGER_INFO);
+                            } else if(multiJobInstances.size() < job.getQuantity()){
+                                int toStart = job.getQuantity() - multiJobInstances.size();
+                                JobCoreUtils.printToLog(ThreadSupervisor.class, null, "Arrancando " + toStart + " " + job.getName(), false, null, "support-level-1", Config.LOGGER_INFO);
+                                for(int i = 0; isAlive() && i <  toStart; ++i){
+                                    jobInstance = instatiateJob(job, jobDelay);
+                                    if(jobInstance != null){
+                                        multiJobInstances.add(jobInstance);
+                                    }
+                                }
+                            }
+                        } else {
+                            if(multiJobInstances == null) multiJobInstances = new ArrayList<>();
+                            JobCoreUtils.printToLog(ThreadSupervisor.class, null, "Arrancando " + job.getQuantity() + " " + job.getName(), false, null, "support-level-1", Config.LOGGER_INFO);
+                            for(int i = 0; isAlive() && i <  job.getQuantity(); ++i){
+                                jobInstance = instatiateJob(job, jobDelay);
+                                if(jobInstance != null){
+                                    multiJobInstances.add(jobInstance);
+                                }
+                            }
+                        }
+                        multiInstanceJobs.put(job.getId(), multiJobInstances);
+                    }catch (Exception ex){
+                        job.failedJob();
+                        JobCoreUtils.printToLog(ThreadSupervisor.class,
+                                "Error en el ThreadSupervisor",
+                                "ocurrio un error activando el job:" + job.getName() + " id:" + job.getId() + " el job sera desactivado.",
                                 true,
                                 ex,
                                 "support-level-1",
@@ -349,6 +390,35 @@ public class ThreadSupervisor extends HecticusThread {
 
     public synchronized void removeJob(HecticusThread job){
         activeJobs.remove(job);
+    }
+
+    private HecticusThread instatiateJob(Job actual, long jobDelay) throws ClassNotFoundException, IllegalAccessException, InstantiationException, IOException {
+        //getting class name
+        Class jobClassName = Class.forName(actual.getClassName().trim());
+        final HecticusThread j = (HecticusThread) jobClassName.newInstance();
+        //update to running
+        if(!actual.isMultiInstance()) {
+            actual.activateJob();
+        }
+        //parse params
+        LinkedHashMap jobParams = null;
+        if (actual.getParams() != null && !actual.getParams().isEmpty()) {
+            String tempParams = StringEscapeUtils.unescapeHtml4(actual.getParams());
+            ObjectMapper mapper = new ObjectMapper();
+            jobParams = mapper.readValue(tempParams, LinkedHashMap.class);
+        }
+        j.setName(actual.getName() + "-" + System.currentTimeMillis());
+        j.setParams(jobParams);
+        j.setJob(actual);
+        j.setRun(getRun());
+        Cancellable cancellable = null;
+        if(actual.isMultiInstance() || actual.isDaemon()) {
+            cancellable = system.scheduler().schedule(Duration.create(jobDelay, SECONDS), Duration.create(Long.parseLong(actual.getTimeParams()), SECONDS), j, system.dispatcher());
+        } else {
+            cancellable = system.scheduler().scheduleOnce(Duration.create(jobDelay, SECONDS), j, system.dispatcher());
+        }
+        j.setCancellable(cancellable);
+        return j;
     }
 
 

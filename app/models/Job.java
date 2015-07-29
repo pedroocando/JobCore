@@ -30,7 +30,8 @@ public class Job extends HecticusModel {
     private String timeParams;
     private Integer frequency;
     private boolean daemon;
-//    private boolean running;
+    private boolean multiInstance;
+    private Integer quantity;
 
     @OneToOne
     @JoinColumn(name = "id_instance")
@@ -54,15 +55,15 @@ public class Job extends HecticusModel {
     //get active
 
     public static List<Job> getToActivateJobs(Instance instance){
-        return finder.where().eq("status","1").lt("nextTimestamp", System.currentTimeMillis()).eq("instance", instance).orderBy("id asc").setMaxRows(1000).findList();
+        return finder.where().eq("status","1").lt("nextTimestamp", System.currentTimeMillis()).eq("instance", instance).eq("multiInstance", false).orderBy("id asc").setMaxRows(1000).findList();
     }
 
     public static List<Job> getToStopJobs(Instance instance){
-        return finder.where().or(Expr.eq("status","0"), Expr.eq("status","3")).eq("instance", instance).orderBy("id asc").setMaxRows(1000).findList();
+        return finder.where().or(Expr.eq("status","0"), Expr.eq("status","3")).eq("instance", instance).eq("multiInstance", false).orderBy("id asc").setMaxRows(1000).findList();
     }
 
     public static List<Job> getRunningJobs(Instance instance){
-        return finder.where().eq("status","2").eq("instance", instance).orderBy("id asc").setMaxRows(1000).findList();
+        return finder.where().eq("status","2").eq("instance", instance).eq("multiInstance", false).orderBy("id asc").setMaxRows(1000).findList();
     }
 
     public static List<Job> getBadJobs(Instance instance){ //is this one???
@@ -70,11 +71,15 @@ public class Job extends HecticusModel {
     }
 
     public static List<Job> getUnasignedDaemons(){
-        return finder.where().eq("status","1").eq("instance", null).eq("daemon", true).orderBy("id asc").findList();
+        return finder.where().eq("status","1").eq("instance", null).eq("daemon", true).eq("multiInstance", false).orderBy("id asc").findList();
     }
 
     public static List<Job> getUnasignedScheduled(){
-        return finder.where().eq("status","1").eq("instance", null).eq("daemon", false).orderBy("id asc").findList();
+        return finder.where().eq("status","1").eq("instance", null).eq("daemon", false).eq("multiInstance", false).orderBy("id asc").findList();
+    }
+
+    public static List<Job> getMultiInstanceJobs(){
+        return finder.where().eq("status","1").lt("nextTimestamp", System.currentTimeMillis()).eq("multiInstance", true).orderBy("id asc").setMaxRows(1000).findList();
     }
 
     public void activateJob(){
@@ -382,13 +387,21 @@ public class Job extends HecticusModel {
         this.instance = instance;
     }
 
-//    public boolean isRunning() {
-//        return running;
-//    }
+    public boolean isMultiInstance() {
+        return multiInstance;
+    }
 
-//    public void setRunning(boolean running) {
-//        this.running = running;
-//    }
+    public void setMultiInstance(boolean multiInstance) {
+        this.multiInstance = multiInstance;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
 
     public void markAsRunning(){
         this.refresh();
