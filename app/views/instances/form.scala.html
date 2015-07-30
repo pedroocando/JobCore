@@ -1,0 +1,72 @@
+@(instanceViewForm: Form[models.Instance])
+
+@import helper._
+@import helper.twitterBootstrap._
+
+@title = {}
+
+@main(title = Messages("instances.create"), nav = "create") {
+
+    @if(flash.containsKey("success")) {
+        <div class="alert-message warning">
+            <strong>Error!</strong> @flash.get("success")
+        </div>
+    }
+
+    @if(instanceViewForm.hasErrors) {
+        <div class="alert alert-dismissable alert-danger">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            <strong>@Messages("generic.error.title")</strong> @Messages("generic.error.content")
+            <p>@instanceViewForm.errorsAsJson</p>
+        </div>
+    }
+
+
+    @helper.form(action = controllers.routes.InstancesView.submit) {
+
+        <fieldset>
+            <legend>@Messages("instances.info")</legend>
+
+            @inputText(
+                instanceViewForm("ip"),
+                '_label -> Messages("instances.ip"),
+                '_help -> Messages("instances.ip.help"),
+                'class -> "form-control",
+                '_error -> instanceViewForm.globalError
+            )
+
+            @inputText(
+                instanceViewForm("name"),
+                '_label -> Messages("instances.name"),
+                '_help -> Messages("instances.name.help"),
+                'class -> "form-control",
+                '_error -> instanceViewForm.globalError
+            )
+
+            @inputText(
+                instanceViewForm("running"),
+                '_label -> Messages("instances.running"),
+                '_help -> Messages("instances.running.help"),
+                'class -> "form-control",
+                '_error -> instanceViewForm.globalError
+            )
+
+            @inputText(
+                instanceViewForm("test"),
+                '_label -> Messages("instances.test"),
+                '_help -> Messages("instances.test.help"),
+                'class -> "form-control",
+                '_error -> instanceViewForm.globalError
+            )
+
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" class="btn btn-success" value=@Messages("instances.submit.create")>
+            <a href="@controllers.routes.InstancesView.list()" class="btn btn-primary">@Messages("generic.cancel")</a>
+        </div>
+
+    }
+
+}

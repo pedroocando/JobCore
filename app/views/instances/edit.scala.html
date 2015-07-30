@@ -1,0 +1,112 @@
+@(id: Integer, instanceViewForm: Form[models.Instance])
+
+@import helper._
+@import helper.twitterBootstrap._
+@import helpers._
+
+@title = {}
+
+@main(title = Messages("instances.edit"), nav = "create") {
+
+    @if(instanceViewForm.hasErrors) {
+        <div class="alert alert-dismissable alert-danger">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            <strong>@Messages("generic.error.title")</strong> @Messages("generic.error.content")
+            <p>@instanceViewForm.errorsAsJson</p>
+        </div>
+    }
+
+
+    @helper.form(controllers.routes.InstancesView.update(id), 'enctype -> "multipart/form-data") {
+
+        <fieldset>
+            <legend>@Messages("instances.info")</legend>
+
+            <div class="row">
+                <div class="col-lg-9">
+                    @inputText(
+                        instanceViewForm("ip"),
+                        '_label -> Messages("instances.ip"),
+                        '_help -> Messages("instances.ip.help"),
+                        'class -> "form-control",
+                        '_error -> instanceViewForm.globalError
+                    )
+                </div>
+                <div class="col-lg-3">
+                    <button id="pinger" class="btn btn-primary" type="button" onclick="ping()">@Messages("instances.ping")</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-9">
+                @inputText(
+                    instanceViewForm("name"),
+                    '_label -> Messages("instances.name"),
+                    '_help -> Messages("instances.name.help"),
+                    'class -> "form-control",
+                    '_error -> instanceViewForm.globalError
+                )
+                </div>
+                <div class="col-lg-1">
+                    @materialCheckbox(
+                        instanceViewForm("running"),
+                        '_label -> Messages("instances.running"),
+                        '_error -> instanceViewForm.globalError,
+                        'class -> "allCheckbox"
+                    )
+                </div>
+                <div class="col-lg-1">
+                    @materialCheckbox(
+                        instanceViewForm("test"),
+                        '_label -> Messages("instances.test"),
+                        '_error -> instanceViewForm.globalError,
+                        'class -> "allCheckbox"
+                    )
+                </div>
+                <div class="col-lg-1">
+                    @materialCheckbox(
+                        instanceViewForm("master"),
+                        '_label -> Messages("instances.master"),
+                        '_error -> instanceViewForm.globalError,
+                        'class -> "allCheckbox"
+                    )
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value=@Messages("instances.submit.update") class="btn btn-success">
+            <a href="@controllers.routes.InstancesView.list()" class="btn btn-primary">@Messages("generic.cancel")</a>
+        </div>
+
+    }
+
+    @form(controllers.routes.InstancesView.delete(id), 'class -> "topRight") {
+        <input type="submit" value=@Messages("instances.submit.delete") class="btn btn-danger">
+
+    }
+    <script>
+        var ping =  function() {
+            var ip = $("#ip").val();
+            var pinger = $("#pinger");
+            $.ajax({
+                url : 'http://'+ip+'/jobcore/alive',
+                type: 'GET',
+                contentType: "application/json; charset=utf-8",
+                dataType: 'text',
+                timeout : 60000,
+                success : function(data, status) {
+                    pinger.removeClass("btn-danger");
+                    pinger.addClass("btn-success");
+                },
+                error : function(xhr, ajaxOptions, thrownError) {
+                    pinger.removeClass("btn-success");
+                    pinger.addClass("btn-danger");
+                }
+            });
+
+        }
+    </script>
+
+}

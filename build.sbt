@@ -24,7 +24,9 @@ libraryDependencies ++= Seq(
   "com.sun.xml.messaging.saaj" % "saaj-impl" % "1.3",
   "com.typesafe.akka" %% "akka-actor" % "2.3.3",
   "com.typesafe.akka" %% "akka-contrib" % "2.3.3",
-  "com.typesafe.akka" %% "akka-remote" % "2.3.4"
+  "com.typesafe.akka" %% "akka-remote" % "2.3.4",
+  "be.objectify"  %% "deadbolt-java"     % "2.3.0-RC1",
+  "com.feth"      %% "play-authenticate" % "0.6.5-SNAPSHOT"
 )
 
 resolvers ++= Seq(
@@ -33,7 +35,9 @@ resolvers ++= Seq(
   "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/",
   "play-easymail (release)" at "http://joscha.github.io/play-easymail/repo/releases/",
   "play-easymail (snapshot)" at "http://joscha.github.io/play-easymail/repo/snapshots/",
-  Resolver.url("Objectify Play Repository", url("http://schaloner.github.io/releases/"))(Resolver.ivyStylePatterns)
+  Resolver.url("Objectify Play Repository", url("http://schaloner.github.io/releases/"))(Resolver.ivyStylePatterns),
+  "play-authenticate (release)" at "http://joscha.github.io/play-authenticate/repo/releases/",
+  "play-authenticate (snapshot)" at "http://joscha.github.io/play-authenticate/repo/snapshots/"
 )
 
 
