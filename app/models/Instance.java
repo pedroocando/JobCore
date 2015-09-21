@@ -7,11 +7,15 @@ import play.Play;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
 import play.libs.Json;
+import scala.Tuple2;
+import scala.collection.JavaConversions;
+import scala.collection.mutable.Buffer;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;

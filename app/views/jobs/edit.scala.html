@@ -1,0 +1,265 @@
+@(id: Long, jobViewForm: Form[models.Job])
+
+@import helper._
+@import helper.twitterBootstrap._
+@import helpers._
+
+@title = {}
+
+@main(title = Messages("jobs.edit"), nav = "create") {
+
+    @if(jobViewForm.hasErrors) {
+        <div class="alert alert-dismissable alert-danger">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            <strong>@Messages("generic.error.title")</strong> @Messages("generic.error.content")
+            <p>@jobViewForm.errorsAsJson</p>
+        </div>
+    }
+
+
+    @helper.form(controllers.routes.JobsView.update(id), 'enctype -> "multipart/form-data") {
+
+        <fieldset>
+            <legend>@Messages("jobs.info")</legend>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    @select(
+                        jobViewForm("status"),
+                        options("0"->Messages("jobs.status.off"), "1"->Messages("jobs.status.on"), "2"->Messages("jobs.status.running")),
+                        '_label -> Messages("jobs.status"),
+                        'class -> "form-control"
+                    )
+                </div>
+                <div class="col-lg-6">
+                    @inputText(
+                        jobViewForm("className"),
+                        '_label -> Messages("jobs.className"),
+                        '_help -> Messages("jobs.className.help"),
+                        'class -> "form-control",
+                        '_error -> jobViewForm.globalError
+                    )
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    @inputText(
+                        jobViewForm("name"),
+                        '_label -> Messages("jobs.name"),
+                        '_help -> Messages("jobs.name.help"),
+                        'class -> "form-control",
+                        '_error -> jobViewForm.globalError
+                    )
+                </div>
+                <div class="col-lg-6">
+                    @inputText(
+                        jobViewForm("params"),
+                        '_label -> Messages("jobs.params"),
+                        '_help -> Messages("jobs.params.help"),
+                        'class -> "form-control",
+                        '_error -> jobViewForm.globalError
+                    )
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="col-lg-6">
+                    <h2>@Messages("jobs.daemon")</h2>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @materialCheckbox(
+                                jobViewForm("daemon"),
+                                'label -> Messages("jobs.daemon"),
+                                '_help -> Messages("jobs.daemon.help"),
+                                'class -> "daemonCheckbox"
+                            )
+                        </div>
+                        <div class="col-lg-6">
+                            @inputText(
+                                jobViewForm("daemonFrequency"),
+                                '_label -> Messages("jobs.daemon.frequency"),
+                                '_help -> Messages("jobs.daemon.frequency.help"),
+                                'class -> "form-control daemonFrequency",
+                                '_error -> jobViewForm.globalError
+                            )
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <h2>@Messages("jobs.multiinstance")</h2>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @materialCheckbox(
+                                jobViewForm("multiInstance"),
+                                'label -> Messages("jobs.multiinstance"),
+                                '_help -> Messages("jobs.multiinstance.help"),
+                                'class -> "multiInstanceCheckbox"
+                            )
+                        </div>
+                        <div class="col-lg-6">
+                            @inputText(
+                                jobViewForm("quantity"),
+                                '_label -> Messages("jobs.multiinstance.quantity"),
+                                '_help -> Messages("jobs.multiinstance.quantity.help"),
+                                'class -> "form-control quantity",
+                                '_error -> jobViewForm.globalError
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>@Messages("jobs.scheduled")</h2>
+
+            <div class="row">
+                <div class="col-lg-2">
+                    @inputText(
+                        jobViewForm("nextTimestamp"),
+                        '_label -> Messages("jobs.nextTimestamp"),
+                        '_help -> Messages("jobs.nextTimestamp.help"),
+                        'class -> "form-control frequencyField",
+                        '_error -> jobViewForm.globalError
+                    )
+                </div>
+                <div class="col-lg-2">
+                    @select(
+                        jobViewForm("frequency"),
+                        options("0"->Messages("jobs.frequency.once"), "1"->Messages("jobs.frequency.year"), "2"->Messages("jobs.frequency.month") , "3"->Messages("jobs.frequency.week"), "4"->Messages("jobs.frequency.day")),
+                        '_label -> Messages("jobs.frequency"),
+                        '_help -> Messages("jobs.frequency.help"),
+                        'class -> "form-control frequencyField"
+                    )
+                </div>
+                <div class="col-lg-8">
+                    <div class="row frequencyField" id="days">
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("sunday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("monday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("tuesday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("wednesday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("thursday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("friday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                        <div class="col-md-1">
+                        @materialCheckbox(
+                            jobViewForm("saturday"),
+                            'label -> Messages("jobs.daemon"),
+                            'class -> "frequencyField"
+                        )
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            @jobdatetimepicker(
+                jobViewForm("Date"),
+                "date",
+                Messages("jobs.timeParams"),
+                'format -> "DD/MM/YYYY-HH:mm",
+                'class -> "form-control frequencyField"
+            )
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value=@Messages("jobs.submit.update") class="btn btn-success">
+            <a href="@controllers.routes.JobsView.list()" class="btn btn-primary">@Messages("generic.cancel")</a>
+        </div>
+
+    }
+
+    @form(controllers.routes.JobsView.delete(id), 'class -> "topRight") {
+        <input type="submit" value=@Messages("jobs.submit.delete") class="btn btn-danger">
+
+    }
+
+    <script>
+
+        $('.daemonCheckbox').click(function(e) {
+            var attr = $('.frequencyField').attr('disabled');
+            if (!("this").checked && typeof attr !== typeof undefined && attr === 'disabled') {
+                $('.frequencyField').removeAttr('disabled');
+                $('.daemonFrequency').attr('disabled','disabled');
+                $('.quantity').attr('disabled','disabled');
+                $('.multiInstanceCheckbox').attr('disabled','disabled');
+            } else {
+                $('.frequencyField').attr('disabled','disabled');
+                $('.daemonFrequency').removeAttr('disabled');
+                $('.quantity').removeAttr('disabled');
+                $('.multiInstanceCheckbox').removeAttr('disabled');
+            }
+        })
+
+        $('#frequency').change(function(e) {
+            console.log($(this).val());
+            if($(this).val() == "3"){
+                $('#days').show();
+                $('#Datez').attr("data-date-pickDate", false);
+                $('#Date').attr("data-date-pickDate", false);
+            } else {
+                $('#days').hide();
+                $('#Datez').removeAttr('data-date-pickDate');
+                $('#Date').removeAttr('data-date-pickDate');
+            }
+        })
+
+        $(document).ready(function(e){
+            if (document.getElementById("daemon").checked){
+                $('.frequencyField').attr('disabled','disabled');
+            } else {
+                $('.daemonFrequency').attr('disabled','disabled');
+                $('.quantity').attr('disabled','disabled');
+                $('.multiInstanceCheckbox').attr('disabled','disabled');
+            }
+            if ($("#frequency").val() == "3"){
+                $('#days').show();
+                $('#Datez').attr("data-date-pickDate", false);
+                $('#Date').attr("data-date-pickDate", false);
+            } else {
+                $('#days').hide();
+                $('#Datez').removeAttr('data-date-pickDate');
+                $('#Date').removeAttr('data-date-pickDate');
+            }
+        });
+
+    </script>
+
+}

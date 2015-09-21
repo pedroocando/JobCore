@@ -1,0 +1,64 @@
+@(configViewForm: Form[models.Config])
+
+@import helper._
+@import helper.twitterBootstrap._
+
+@title = {}
+
+@main(title = Messages("configs.create"), nav = "create") {
+
+    @if(flash.containsKey("success")) {
+        <div class="alert-message warning">
+            <strong>Error!</strong> @flash.get("success")
+        </div>
+    }
+
+    @if(configViewForm.hasErrors) {
+        <div class="alert alert-dismissable alert-danger">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            <strong>@Messages("generic.error.title")</strong> @Messages("generic.error.content")
+            <p>@configViewForm.errorsAsJson</p>
+        </div>
+    }
+
+
+    @helper.form(action = controllers.routes.ConfigsView.submit) {
+
+        <fieldset>
+            <legend>@Messages("configs.info")</legend>
+
+            @inputText(
+                configViewForm("configKey"),
+                '_label -> Messages("configs.key"),
+                '_help -> Messages("configs.key.help"),
+                'class -> "form-control",
+                '_error -> configViewForm.globalError
+            )
+
+            @inputText(
+                configViewForm("value"),
+                '_label -> Messages("configs.value"),
+                '_help -> Messages("configs.value.help"),
+                'class -> "form-control",
+                '_error -> configViewForm.globalError
+            )
+
+            @inputText(
+                configViewForm("description"),
+                '_label -> Messages("configs.description"),
+                '_help -> Messages("configs.description.help"),
+                'class -> "form-control",
+                '_error -> configViewForm.globalError
+            )
+
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" class="btn btn-success" value=@Messages("configs.submit.create")>
+            <a href="@controllers.routes.ConfigsView.list()" class="btn btn-primary">@Messages("generic.cancel")</a>
+        </div>
+
+    }
+
+}
