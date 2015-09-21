@@ -76,6 +76,7 @@ public class Config extends Model {
     public static Model.Finder<Long, Config> finder = new
             Model.Finder<Long, Config>(Long.class, Config.class);
 
+
     public Long getIdConfig() {
         return idConfig;
     }
@@ -141,6 +142,14 @@ public class Config extends Model {
     public static String getPMCHost() {
         Config c = finder.where().eq("configKey","pmc-url").findUnique();
         return c.getValue();
+    }
+
+    public static String getAppName() {
+        Config c = finder.where().eq("configKey","app-name").findUnique();
+        if(c != null) {
+            return c.getValue();
+        }
+        return null;
     }
 
     public static double getDouble(String key){

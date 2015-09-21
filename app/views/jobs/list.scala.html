@@ -1,0 +1,153 @@
+@(currentPage: com.avaje.ebean.Page[models.Job], currentSortBy: String, currentOrder: String, currentFilter: String, sortView: Boolean)
+
+@****************************************
+* Helper generating navigation links    *
+****************************************@
+@link(newPage:Int, newSortBy:String) = @{
+
+    var sortBy = currentSortBy
+    var order = currentOrder
+
+    if(newSortBy != null) {
+        sortBy = newSortBy
+        if(currentSortBy == newSortBy) {
+            if(currentOrder == "asc") {
+                order = "desc"
+            } else {
+                order = "asc"
+            }
+        } else {
+            order = "asc"
+        }
+    }
+
+    // Generate the link
+    controllers.routes.JobsView.list(newPage, sortBy, order, currentFilter)
+
+}
+
+@**********************************
+* Helper generating table headers *
+***********************************@
+@header(key:String, title:String) = {
+<th class='@key.replace(".","_") header @if(currentSortBy == key) @{if(currentOrder == "asc") "headerSortDown" else "headerSortUp"}'>
+    <a href="@link(0, key)">@title</a>
+</th>
+}
+
+@title = {}
+
+@main(title = Messages("jobs.list.head"), nav = "") {
+    <div class="bs-docs-section">
+
+        <div class="row">
+            <div class="col-lg-12">
+                <h1 id="homeTitle">@Messages("jobs.list.title", currentPage.getTotalRowCount)</h1>
+            </div>
+        </div>
+
+        <!--DIALOG-->
+        @if(flash.containsKey("success")) {
+            <div class="alert-message warning">
+                <strong>@Messages("generic.list.done")</strong> @flash.get("success")
+            </div>
+        }
+        <div id="alert" class="alert-message warning" style="display: none; ">
+            <strong>@Messages("generic.list.done")</strong>
+        </div>
+
+        <!--ACTIONS-->
+        <div id="actions">
+            <form action='@link(0, "name")' method="GET">
+
+                @if(!sortView) {
+                <div class="col-lg-6">
+                    <input type="search" class="form-control floating-label" id="searchbox" name="f" placeholder=@Messages("jobs.list.filter.name")>
+                </div>
+                <div class="col-lg-6">
+                    <input type="submit" id="searchsubmit" value=@Messages("jobs.list.filter.name") class="btn btn-info">
+                </div>
+                }
+
+                @if(sortView) {
+                <a class="btn success" id="ajax" href="#" data-url="/garotas/v1/jobs/sort/" >@Messages("generic.list.apply")</a>
+                }
+
+            </form>
+        </div>
+
+        @if(currentPage.getTotalRowCount == 0) {
+
+            <div class="well">
+                <em>@Messages("generic.list.empty")</em>
+            </div>
+
+        } else {
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="bs-component">
+                        <div class="list-group">
+                            @for((job, index) <-  currentPage.getList().zipWithIndex) {
+                            <div class="list-group-item">
+                                <a href="@controllers.routes.JobsView.edit(job.getId())">
+                                    <div class="row-content">
+                                        <h4 class="list-group-item-heading">@Html(""+job.getId()) - @Html(job.getName())</h4>
+                                        <p class="list-group-item-text">@Html(job.getClassName())</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="list-group-separator">
+                                <!--separator-->
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <div class="bs-docs-section">
+        <div class="row">
+            <div class="col-lg-12">
+
+                <ul class="pager">
+
+                    @if(currentPage.hasPrev) {
+                        <li class="previous">
+                            <a href="@link(currentPage.getPageIndex - 1, null)">← @Messages("generic.list.previous")</a>
+                        </li>
+                    } else {
+                        <li class="previous disabled">
+                            <a href="javascript:void(0)">← @Messages("generic.list.previous")</a>
+                        </li>
+                    }
+
+                    <li class="current">
+                        <a>@Messages("generic.list.listing") @currentPage.getDisplayXtoYofZ(" "+Messages("generic.list.through")+" ",  " "+Messages("generic.list.of")+" ")</a>
+                    </li>
+
+                    @if(currentPage.hasNext) {
+                        <li class="next">
+                            <a href="@link(currentPage.getPageIndex + 1, null)">@Messages("generic.list.next") →</a>
+                        </li>
+                    } else {
+                        <li class="next disabled">
+                            <a href="javascript:void(0)">@Messages("generic.list.next") →</a>
+                        </li>
+                    }
+
+
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <a href="@controllers.routes.JobsView.blank" class="btn btn-primary">@Messages("jobs.list.new")</a>
+            </div>
+        </div>
+
+    </div>
+
+}
