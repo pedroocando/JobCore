@@ -126,6 +126,11 @@ public class Config extends Model {
         return Integer.parseInt(c.getValue());
     }
 
+    public static float getFloat(String key){
+        Config c = finder.where().eq("configKey", key).findUnique();
+        return Float.parseFloat(c.getValue());
+    }
+
     /**
      * Metodo para obtener el nombre del host actual
      * @return nombre del host actual
@@ -180,5 +185,13 @@ public class Config extends Model {
         Config c = finder.where().eq("configKey", key).findUnique();
         int value = Integer.parseInt(c.getValue());
         return value == 0 ? false : true;
+    }
+
+    public static String getPrefix() {
+        Config c = finder.where().eq("configKey", "alive-prefix").findUnique();
+        if(c != null){
+            return c.getValue();
+        }
+        return "";
     }
 }
