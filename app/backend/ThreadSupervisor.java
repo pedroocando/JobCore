@@ -43,6 +43,14 @@ public class ThreadSupervisor extends HecticusThread {
         init();
     }
 
+    public ActorSystem getSystem() {
+        return system;
+    }
+
+    public void setSystem(ActorSystem system) {
+        this.system = system;
+    }
+
     /**
      * Metodo para monitorear los tiempos de ejecucion de los hilos del kyubi
      */
@@ -124,10 +132,11 @@ public class ThreadSupervisor extends HecticusThread {
         WSResponse wsResponse = null;
         int wsStatus = 0;
         StringBuilder fallenInstances = new StringBuilder();
+        String prefix = Config.getPrefix();
         JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Checkeando Instancias...", false, null, "support-level-1", Config.LOGGER_INFO);
         for(Instance instance : runningInstances){
             try {
-                result = WS.url("http://" + instance.getIp() + "/jobcore/alive").get();
+                result = WS.url("http://" + instance.getIp() + prefix + "/jobcore/alive").get();
                 wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 wsStatus = wsResponse.getStatus();
                 if (wsStatus != 200) {
@@ -140,7 +149,7 @@ public class ThreadSupervisor extends HecticusThread {
                     realRunning.add(instance);
                 }
             } catch (Exception e){
-                JobCoreUtils.printToLog(ThreadSupervisor.class, "", instance.getName() + " muerta", false, null, "support-level-1", Config.LOGGER_INFO);
+                JobCoreUtils.printToLog(ThreadSupervisor.class, "", instance.getName() + " muerta", false, e, "support-level-1", Config.LOGGER_INFO);
                 fallenInstances.append("\t - ").append(instance.getIp());
                 instance.setRunning(false);
                 instance.update();
@@ -162,13 +171,14 @@ public class ThreadSupervisor extends HecticusThread {
     private void checkMaster(ServerInstance serverInstance) {
         JobCoreUtils.printToLog(ThreadSupervisor.class, "", "Buscando al master", false, null, "support-level-1", Config.LOGGER_INFO);
         Instance master = Instance.getMaster();
+        String prefix = Config.getPrefix();
         if(master == null) {
             serverInstance.takeMaster();
             JobCoreUtils.printToLog(ThreadSupervisor.class, "Instancia master apagada", "No hay master, se reasignara el rol de master", true, null, "support-level-1", Config.LOGGER_ERROR);
         } else {
             boolean takeMaster = false;
             try {
-                F.Promise<WSResponse> result = WS.url("http://" + master.getIp() + "/jobcore/alive").get();
+                F.Promise<WSResponse> result = WS.url("http://" + master.getIp() + prefix + "/jobcore/alive").get();
                 WSResponse wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 int wsStatus = wsResponse.getStatus();
                 if(wsStatus != 200){
@@ -193,9 +203,10 @@ public class ThreadSupervisor extends HecticusThread {
         int wsStatus = 0;
         List<Instance> slaves = Instance.getSlaves(idMaster);
         StringBuilder fallenInstances = new StringBuilder();
+        String prefix = Config.getPrefix();
         for(Instance slave : slaves){
             try {
-                result = WS.url("http://" + slave.getIp() + "/jobcore/alive").get();
+                result = WS.url("http://" + slave.getIp() + prefix + "/jobcore/alive").get();
                 wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
                 wsStatus = wsResponse.getStatus();
                 if (wsStatus != 200) {
@@ -213,7 +224,8 @@ public class ThreadSupervisor extends HecticusThread {
 
     private boolean checkInstance(Instance instance) {
         try {
-            F.Promise<WSResponse> result = WS.url("http://" + instance.getIp() + "/jobcore/alive").get();
+            String prefix = Config.getPrefix();
+            F.Promise<WSResponse> result = WS.url("http://" + instance.getIp() + prefix + "/jobcore/alive").get();
             WSResponse wsResponse = result.get(Config.getLong("ws-timeout-millis"), TimeUnit.MILLISECONDS);
             int wsStatus = wsResponse.getStatus();
             return wsStatus != 200;
