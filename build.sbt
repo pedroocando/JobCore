@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   javaEbean,
   cache,
   javaWs,
-  "mysql" % "mysql-connector-java" % "5.1.26",
+  "mysql" % "mysql-connector-java" % "5.1.46",
   "com.google.guava" % "guava" % "15.0",
   "net.vz.mongodb.jackson" %% "play-mongo-jackson-mapper" % "1.1.0",
   "org.reflections" % "reflections" % "0.9.7.RC1",
