@@ -30,9 +30,9 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= Seq(
-  "Maven1 Repository" at "https://repo1.maven.org/maven2/net/vz/mongodb/jackson/play-mongo-jackson-mapper_2.10/1.1.0/",
-  "Apache" at "https://repo1.maven.org/maven2/",
-  "jBCrypt Repository" at "https://repo1.maven.org/maven2/org/",
+  "Maven1 Repository" at "http://insecure.repo1.maven.org/maven2/net/vz/mongodb/jackson/play-mongo-jackson-mapper_2.10/1.1.0/",
+  "Apache" at "http://insecure.repo1.maven.org/maven2/",
+  "jBCrypt Repository" at "http://insecure.repo1.maven.org/maven2/org/",
   "play-easymail (release)" at "https://joscha.github.io/play-easymail/repo/releases/",
   "play-easymail (snapshot)" at "https://joscha.github.io/play-easymail/repo/snapshots/",
   Resolver.url("Objectify Play Repository", url("https://schaloner.github.io/releases/"))(Resolver.ivyStylePatterns),
